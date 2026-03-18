@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditeur d'Images Vectorielles</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🎨 Éditeur d'Images</h1>
+                <p class="subtitle">PNG • JPG • SVG • EPS • AI • CDR • CMX</p>
+            </div>
+            <button class="menu-toggle" id="menuToggle">☰</button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Panel - Tools -->
+            <aside class="tools-panel" id="toolsPanel">
+                <div class="panel-section">
+                    <h3>📁 Importer</h3>
+                    <div class="drop-zone" id="dropZone">
+                        <div class="drop-zone-content">
+                            <span class="drop-icon">📤</span>
+                            <p>Glissez une image ici</p>
+                            <p class="drop-hint">ou cliquez pour sélectionner</p>
+                            <input type="file" id="fileInput"
+                                accept=".png,.jpg,.jpeg,.svg,.eps,.ai,.cdr,.cmx,.webp,.gif,.bmp,.tiff" hidden>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section" id="editTools" style="display: none;">
+                    <h3>✂️ Recadrage</h3>
+                    <div class="crop-controls">
+                        <div class="crop-buttons">
+                            <button class="tool-btn" id="cropBtn" title="Recadrer">
+                                <span>✂️</span> Recadrer
+                            </button>
+                            <button class="tool-btn success" id="applyCropBtn" style="display: none;">
+                                <span>✅</span> Appliquer
+                            </button>
+                            <button class="tool-btn danger" id="cancelCropBtn" style="display: none;">
+                                <span>❌</span> Annuler
+                            </button>
+                        </div>
+                        <!-- Preset ratios -->
+                        <div class="crop-presets" id="cropPresets" style="display: none;">
+                            <label>Ratio</label>
+                            <div class="preset-buttons">
+                                <button class="preset-btn active" data-ratio="free">Libre</button>
+                                <button class="preset-btn" data-ratio="1:1">1:1</button>
+                                <button class="preset-btn" data-ratio="4:3">4:3</button>
+                                <button class="preset-btn" data-ratio="16:9">16:9</button>
+                                <button class="preset-btn" data-ratio="3:2">3:2</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 1.5rem;">🎨 Outils</h3>
+                    <div class="tools-row">
+                        <button class="tool-btn" id="eyedropperBtn" title="Pipette - Sélectionner une couleur">
+                            <span>💧</span> Pipette
+                        </button>
+                        <button class="tool-btn" id="eraserBtn" title="Gomme - Effacer">
+                            <span>🧹</span> Gomme
+                        </button>
+                    </div>
+                    <div class="eraser-settings" id="eraserSettings" style="display: none;">
+                        <label>Taille de la gomme</label>
+                        <input type="range" id="eraserSize" min="5" max="100" value="20">
+                        <span id="eraserSizeValue">20</span>px
+                    </div>
+
+                    <h3 style="margin-top: 1.5rem;">🚫 Zones d'exclusion</h3>
+                    <p class="tool-hint">Zones protégées lors du changement de couleur</p>
+                    <div class="tools-row">
+                        <button class="tool-btn" id="excludeRectBtn" title="Rectangle d'exclusion">
+                            <span>⬜</span> Rectangle
+                        </button>
+                        <button class="tool-btn" id="excludeCircleBtn" title="Cercle d'exclusion">
+                            <span>⭕</span> Cercle
+                        </button>
+                    </div>
+                    <div class="exclusion-info" id="exclusionInfo" style="display: none;">
+                        <span id="exclusionCount">0</span> zone(s) d'exclusion
+                        <button class="tool-btn small danger" id="clearExclusionsBtn">🗑️ Effacer</button>
+                    </div>
+
+                    <h3 style="margin-top: 1.5rem;">📐 Dimensions</h3>
+                    <div class="tool-group">
+                        <!-- Unit selector -->
+                        <div class="unit-selector">
+                            <label>Unité</label>
+                            <select id="unitSelect" class="format-select">
+                                <option value="mm" selected>mm</option>
+                                <option value="cm">cm</option>
+                                <option value="px">px</option>
+                                <option value="in">inches</option>
+                            </select>
+                        </div>
+                        <div class="size-row">
+                            <div class="size-field">
+                                <label>Largeur</label>
+                                <input type="number" id="widthInput" class="size-input" min="1" step="0.1">
+                            </div>
+                            <div class="size-field">
+                                <label>Hauteur</label>
+                                <input type="number" id="heightInput" class="size-input" min="1" step="0.1">
+                            </div>
+                        </div>
+                        <div class="dpi-row">
+                            <label>DPI (pour mm/cm/in)</label>
+                            <input type="number" id="dpiInput" class="size-input" value="72" min="1">
+                        </div>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="lockRatio" checked>
+                            <span>Garder les proportions</span>
+                        </label>
+                        <button class="tool-btn" id="resizeBtn">
+                            <span>📐</span> Redimensionner
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Embroidery Estimation -->
+                <div class="panel-section" id="embroiderySection" style="display: none;">
+                    <h3>🧵 Estimation Broderie</h3>
+                    <div class="embroidery-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Surface couverte</span>
+                            <span class="stat-value" id="surfaceArea">-- cm²</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Dimensions réelles</span>
+                            <span class="stat-value" id="realDimensions">-- × -- cm</span>
+                        </div>
+                        <div class="stat-row highlight">
+                            <span class="stat-label">Estimation points</span>
+                            <span class="stat-value" id="stitchCount">-- pts</span>
+                        </div>
+                        <p class="stat-note">Basé sur remplissage standard</p>
+                        <button class="tool-btn small" id="recalcEmbroideryBtn">🔄 Recalculer</button>
+                    </div>
+                    <!-- Text size info & warning -->
+                    <div class="text-info-section">
+                        <h4>📝 Taille du texte</h4>
+                        <div class="text-requirements">
+                            <div class="requirement-item">
+                                <span class="req-icon">📏</span>
+                                <div class="req-content">
+                                    <strong>Minimum recommandé : 5mm</strong>
+                                    <p>Le texte doit faire au moins 5mm de hauteur pour être lisible une fois brodé.</p>
+                                </div>
+                            </div>
+                            <div class="requirement-item">
+                                <span class="req-icon">🔤</span>
+                                <div class="req-content">
+                                    <strong>Polices conseillées</strong>
+                                    <p>Privilégiez les polices simples et épaisses (Arial, Helvetica, sans-serif).</p>
+                                </div>
+                            </div>
+                            <div class="requirement-item">
+                                <span class="req-icon">⚠️</span>
+                                <div class="req-content">
+                                    <strong>À éviter</strong>
+                                    <p>Polices fines, scriptes ou avec empattements fins (< 0.8mm d'épaisseur de
+                                            trait).</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Dynamic warning based on analysis -->
+                        <div class="text-warning" id="textWarning" style="display: none;">
+                            <span class="warning-icon">⚠️</span>
+                            <div class="warning-content">
+                                <strong id="textWarningTitle">Détails fins détectés</strong>
+                                <p id="textWarningMessage">Des détails fins ont été détectés dans l'image.</p>
+                                <ul class="warning-details" id="textWarningDetails">
+                                    <li>Vérifiez que le texte fait au moins 5mm de hauteur</li>
+                                    <li>Les lignes fines peuvent ne pas ressortir à la broderie</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- Analysis result -->
+                        <div class="text-analysis" id="textAnalysis">
+                            <div class="analysis-row">
+                                <span>Densité de détails</span>
+                                <span class="analysis-value" id="detailDensity">--</span>
+                            </div>
+                            <div class="analysis-row">
+                                <span>Risque texte petit</span>
+                                <span class="analysis-value" id="smallTextRisk">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section" id="exportSection" style="display: none;">
+                    <h3>💾 Exporter</h3>
+                    <div class="tool-group">
+                        <select id="formatSelect" class="format-select">
+                            <option value="png">PNG (avec transparence)</option>
+                            <option value="jpg">JPG</option>
+                        </select>
+                        <button class="tool-btn primary" id="downloadBtn">
+                            <span>⬇️</span> Télécharger
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center - Canvas -->
+            <section class="canvas-container">
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <div class="placeholder" id="placeholder">
+                        <span class="placeholder-icon">🖼️</span>
+                        <p>Aucune image chargée</p>
+                    </div>
+                    <canvas id="mainCanvas" style="display: none;"></canvas>
+                    <img id="cropperImage" style="display: none;">
+                </div>
+                <div class="canvas-info" id="canvasInfo"></div>
+            </section>
+
+            <!-- Right Panel - Colors -->
+            <aside class="colors-panel" id="colorsPanel" style="display: none;">
+                <div class="panel-section">
+                    <h3>🎨 Couleurs Détectées</h3>
+
+                    <!-- Complexity Badge -->
+                    <div class="complexity-badge" id="complexityBadge">
+                        <span class="complexity-icon">●</span>
+                        <span class="complexity-text">Analyse...</span>
+                    </div>
+
+                    <!-- Warning for complex images -->
+                    <div class="complexity-warning" id="complexityWarning" style="display: none;">
+                        <p>⚠️ Image complexe détectée.</p>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="forceEditColors">
+                            <span>Forcer l'édition des couleurs</span>
+                        </label>
+                    </div>
+
+                    <div class="color-settings" id="colorSettings">
+                        <label>Précision de regroupement</label>
+                        <div class="precision-buttons">
+                            <button class="precision-btn" data-tolerance="60">Faible</button>
+                            <button class="precision-btn active" data-tolerance="40">Moyen</button>
+                            <button class="precision-btn" data-tolerance="20">Élevé</button>
+                            <button class="precision-btn" data-tolerance="10">Très élevé</button>
+                        </div>
+                    </div>
+                    <div class="colors-list" id="colorsList"></div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Status Bar -->
+        <footer class="status-bar">
+            <span id="statusText">Prêt</span>
+        </footer>
+
+        <!-- Color Picker Modal -->
+        <div class="modal" id="colorModal" style="display: none;">
+            <div class="modal-content">
+                <h3>Changer la couleur</h3>
+                <div class="color-picker-wrapper">
+                    <div class="current-color-preview">
+                        <div class="color-box" id="originalColorBox"></div>
+                        <span>→</span>
+                        <div class="color-box" id="newColorBox"></div>
+                    </div>
+                    <input type="color" id="colorPicker" class="color-picker-input">
+                    <div class="transparency-control">
+                        <label>
+                            <input type="checkbox" id="makeTransparent">
+                            Rendre transparent
+                        </label>
+                    </div>
+                    <div class="tolerance-control">
+                        <label>Tolérance de remplacement</label>
+                        <input type="range" id="replaceTolerance" min="0" max="100" value="30">
+                        <span id="replaceToleranceValue">30</span>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="tool-btn" id="cancelColorBtn">Annuler</button>
+                    <button class="tool-btn primary" id="applyColorBtn">Appliquer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="spinner"></div>
+            <p id="loadingText">Chargement...</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

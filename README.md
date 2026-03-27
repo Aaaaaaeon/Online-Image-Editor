@@ -28,3 +28,5 @@ A simple and powerful tool for editing bitmap or vectorial files, with the abili
 ```bash
 git clone https://github.com/Aaaaaaeon/Online-Image-Editor.git
 cd Online-Image-Editor
+npm install
+npm run dev
